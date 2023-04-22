@@ -1,0 +1,41 @@
+version: '3.8'
+
+services: 
+
+  bot:
+    build: . 
+    depends_on:
+      - db
+    env_file:
+      - .env
+    command: bash -c "python app.py"
+    volumes:
+      - .:/code
+
+  db:
+    image: postgres
+    restart: 'unless-stopped'
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_HOST_AUTH_METHOD: ${POSTGRES_HOST_AUTH_METHOD}
+      PGDATA: /var/lib/postgresql/data/data_bot/
+
+  admin1:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=artem23022005.as@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=postgres
+    ports:
+      - "5050:80"
+
+  admin2:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+volumes:
+  postgres_data:
