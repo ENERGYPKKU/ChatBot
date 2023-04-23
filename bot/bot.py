@@ -3,7 +3,7 @@ import random
 import asyncio
 import logging
 from sqlalchemy.ext.asyncio import create_async_engine
-from keyboards import rps_buttons, hello_inline, rps_keyboard
+from keyboards import rps_buttons, hello_inline, rps_keyboard, home_keyboard, info_keyboard
 from aiogram import Bot, Dispatcher
 from config import BOT_TOKEN
 from sqlalchemy import select
@@ -25,37 +25,32 @@ async def handlers():
             await session.commit()
 
         await message.answer(
-            "Hello! Let's play rock, paper, scissors game!",
-            reply_markup=hello_inline)
+            """Привет 👋🏻, меня зовут (имя), я - телеграм бот 🤖 колледжа ГАПОУ МО ПК "Энергия" СП ЦСП "Энергия, создан для помощи абитуриентам, родителям и студентам. Внизу появились кнопки навигации для начала моей работы 👇🏻""",
+            reply_markup=home_keyboard)
 
-    @dp.message_handler(state="*")
-    async def game(message: types.Message):
-        if message.text in rps_buttons:
-            db_session = message.bot.get("db")
-            bot_choice = random.choice(rps_buttons)
-            await message.reply(bot_choice)
-            win_list = [
-                f'{rps_buttons[0]}:{rps_buttons[2]}',  # Rock->Scissors
-                f'{rps_buttons[1]}:{rps_buttons[0]}',  # Paper->Rock
-                f'{rps_buttons[2]}:{rps_buttons[1]}',  # Scissors->Paper
-            ]
-            if message.text == bot_choice:
-                await message.answer("Tie!")
-                return "Tie"
-            if f"{message.text}:{bot_choice}" in win_list:
-                async with db_session() as session:
-                    player: PlayerScore = await session.get(PlayerScore, message.from_user.id)
-                    player.score += 1
-                    await session.commit()
-                await message.answer("You won! +1")
-                return "Win"
-            if f"{message.text}:{bot_choice}" not in win_list:
-                async with db_session() as session:
-                    player: PlayerScore = await session.get(PlayerScore, message.from_user.id)
-                    player.score -= 1
-                    await session.commit()
-                await message.answer("You lost! -1")
-                return "Los"
+    @dp.message_handler(text=['Информация 🤓'])
+    async def information_show(message: types.Message):
+        await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
+
+    @dp.message_handler(text=['Аккаунт 🫵'])
+    async def account_show(message: types.Message):
+        await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
+
+    @dp.message_handler(text=['Задать вопрос ❓'])
+    async def question_show(message: types.Message):
+        await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
+
+    @dp.message_handler(text=['Позвонить 🤳🏻'])
+    async def call_show(message: types.Message):
+        await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
+
+    @dp.message_handler(text=['Специальности 🌐'])
+    async def speliazations_show(message: types.Message):
+        await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
+
+    @dp.message_handler(text=['Форма 🧥'])
+    async def form_show(message: types.Message):
+        await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
 
     @dp.callback_query_handler(text="stats")
     async def stats(call: types.CallbackQuery):
