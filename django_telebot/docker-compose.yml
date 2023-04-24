@@ -1,0 +1,28 @@
+version: '3.7'
+
+services:
+  app:
+    container_name: django_app
+    command: python manage.py runserver
+    build:
+      context: ./djbot
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - ./djbot:/app
+      - ./media/:/vol/web/media
+    ports:
+      - "8000:8000"
+
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=${DB_USER:-user}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-password}
+      - POSTGRES_DB=${DB_NAME:-db_name}
+    env_file:
+      - .env
+    volumes:
+      - ./db:/var/lib/postgresql/data/
