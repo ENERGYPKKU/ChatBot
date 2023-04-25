@@ -12,8 +12,8 @@ from django.core.management.base import BaseCommand
 from django.db.models import Q
 from aiogram.types import InlineKeyboardButton
 from aiogram import types as aiogram_types
-from .keyboards import markup, markup_search, markup_visibility, home_keyboard, info_keyboard, inline_form_markup
-from main.models import Game, UserProfile, Form
+from .keyboards import markup, inline_phone_keyboard, markup_search, markup_visibility, home_keyboard, info_keyboard, inline_form_markup
+from main.models import Game, UserProfile, Form, Contact
 from aiogram.utils import exceptions
 
 logging.basicConfig(level=logging.INFO)
@@ -35,6 +35,7 @@ def getFormButtons():
 
 
 getFormButtons()
+
 
 for game in all_games:
     gameList.append(game.gamename)
@@ -133,6 +134,10 @@ class Command(BaseCommand):
                     "для начала пользования ботом. Спасибо за понимание!"
                 )
 
+        @dp.message_handler(text=['Назад ↩️'])
+        async def go_back_home(message: types.Message):
+            await message.answer("Вернулись домой 🏚️", reply_markup=home_keyboard)
+
         @dp.message_handler(text=['Информация 🤓'])
         async def information_show(message: types.Message):
             await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
@@ -145,9 +150,21 @@ class Command(BaseCommand):
         async def question_show(message: types.Message):
             await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
 
-        @dp.message_handler(text=['Позвонить 🤳🏻'])
+        @database_sync_to_async
+        def getContactEntitiesMessage():
+            if len(Contact.objects.all()) > 0:
+                final_array = []
+                contacts = Contact.objects.all()
+                for contact in contacts:
+                    final_array.append(str(contact))
+                return "Доступные контакты ☎️\n" + "\n\n".join(final_array)
+            else:
+                return "На данный момент нет доступных контактов 😅"
+
+        @dp.message_handler(text=['Контакты 🗒️'])
         async def call_show(message: types.Message):
-            await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
+            message_text = await getContactEntitiesMessage()
+            await message.answer(message_text, reply_markup=home_keyboard)
 
         @dp.message_handler(text=['Специальности 🌐'])
         async def speliazations_show(message: types.Message):
@@ -157,7 +174,6 @@ class Command(BaseCommand):
         async def form_show(message: types.Message):
             if message.from_user.username:
                 await message.answer("Вот вся доступная форма для разных специальностей", reply_markup=inline_form_markup)
-            # await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
 
         @database_sync_to_async
         def getFormEntity(data):

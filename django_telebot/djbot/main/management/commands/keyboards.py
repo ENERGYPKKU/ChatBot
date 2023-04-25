@@ -19,13 +19,16 @@ inline_contact_call_btn = InlineKeyboardButton(
 home_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True, one_time_keyboard=False)
 home_keyboard.add(*["Информация 🤓",
-                    "Аккаунт 🫵",
+                    "Аккаунт 👋🏻",
                     "Задать вопрос ❓",
-                    "Позвонить 🤳🏻"])
+                    "Контакты 🗒️"])
 
 info_keyboard = ReplyKeyboardMarkup(
-    resize_keyboard=True, one_time_keyboard=False)
-info_keyboard.add(*["Специальности 🌐", "Форма 🧥"])
+    resize_keyboard=True, one_time_keyboard=False, row_width=2)
+info_keyboard.add(*["Специальности 🌐", "Форма 🧥", "Назад ↩️"])
+
+inline_phone_keyboard = InlineKeyboardMarkup()
+
 
 inline_stats_button = InlineKeyboardButton(
     text="📃 Stats", callback_data='stats')

@@ -1,4 +1,6 @@
 from django.db import models
+from phonenumber_field.modelfields import PhoneNumberField
+from phonenumber_field.widgets import PhoneNumberPrefixWidget
 
 
 class Game(models.Model):
@@ -72,12 +74,26 @@ class Message(models.Model):
 
 
 class Form(models.Model):
-    name = models.CharField(max_length=255)
-    file = models.FileField()
+    name = models.CharField(max_length=255, verbose_name="Название формы")
+    file = models.FileField(verbose_name="Файл, который содержит форму")
 
     def __str__(self):
         return self.name
 
     class Meta:
-        verbose_name = "Форма"
-        verbose_name_plural = "Форма"
+        verbose_name = "Форма 🧥"
+        verbose_name_plural = "Форма 🧥"
+
+
+class Contact(models.Model):
+    name = models.TextField(
+        verbose_name="Как обращаться? Можно указать дополнительную информацию", max_length=255)
+    phone_number = PhoneNumberField(
+        verbose_name="Номер телефона", help_text="Формат телефона +79123456789")
+
+    def __str__(self):
+        return f"{self.name}: {self.phone_number}"
+
+    class Meta:
+        verbose_name = "Контакт 🗒️"
+        verbose_name_plural = "Контакты 🗒️"
