@@ -1,44 +1,27 @@
+from aiogram.utils import exceptions
+from main.models import UserProfile, Form, Contact
+from .keyboards import markup, inline_phone_keyboard, markup_search, markup_visibility, home_keyboard, info_keyboard, inline_form_markup
+from aiogram import types as aiogram_types
+from aiogram.types import InlineKeyboardButton
+from django.db.models import Q
+from django.core.management.base import BaseCommand
+from django.conf import settings
+from channels.db import database_sync_to_async
+from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.dispatcher.filters import Text
+from aiogram.dispatcher import FSMContext
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram import Bot, Dispatcher, executor, types
 import logging
 
 import json
-from aiogram import Bot, Dispatcher, executor, types
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Text
-from aiogram.dispatcher.filters.state import State, StatesGroup
-from channels.db import database_sync_to_async
-from django.conf import settings
-from django.core.management.base import BaseCommand
-from django.db.models import Q
-from aiogram.types import InlineKeyboardButton
-from aiogram import types as aiogram_types
-from .keyboards import markup, inline_phone_keyboard, markup_search, markup_visibility, home_keyboard, info_keyboard, inline_form_markup
-from main.models import Game, UserProfile, Form, Contact
-from aiogram.utils import exceptions
+import os
+
+project_path = os.path.abspath(os.path.dirname(__file__))
 
 logging.basicConfig(level=logging.INFO)
 
 storage = MemoryStorage()
-
-all_games = Game.objects.all()
-gameList = []
-
-
-def getFormButtons():
-    form_data = Form.objects.all()
-    for form_entity in form_data:
-        form_entity_inline_btn = InlineKeyboardButton(
-            text=form_entity.name,
-            callback_data=form_entity.id
-        )
-        inline_form_markup.add(form_entity_inline_btn)
-
-
-getFormButtons()
-
-
-for game in all_games:
-    gameList.append(game.gamename)
 
 
 class FormState(StatesGroup):
@@ -60,8 +43,8 @@ class Command(BaseCommand):
         bot = Bot(token=settings.TOKEN)
         dp = Dispatcher(bot, storage=storage)
 
-        @dp.message_handler(state="*", commands=["cancel"])
-        @dp.message_handler(Text(equals="cancel", ignore_case=True), state="*")
+        @ dp.message_handler(state="*", commands=["cancel"])
+        @ dp.message_handler(Text(equals="cancel", ignore_case=True), state="*")
         async def cancel_handler(message: types.Message, state: FSMContext):
             """Allow user to cancel any action."""
             current_state = await state.get_state()
@@ -71,24 +54,24 @@ class Command(BaseCommand):
             await state.finish()
             await message.answer("Ваш запрос успешно отменен.")
 
-        @dp.callback_query_handler(text="visible")
+        @ dp.callback_query_handler(text="visible")
         async def process_callback_button1(message: types.Message):
             await update_visibility(message, vis=True)
             await message.answer("Ваш профиль теперь доступен для поиска")
 
-        @dp.callback_query_handler(text="invisible")
+        @ dp.callback_query_handler(text="invisible")
         async def process_callback_button2(message: types.Message):
             await update_visibility(message, vis=False)
             await message.answer("Ваш профиль больше не доступен для поиска")
 
-        @dp.message_handler(commands=["visibility"])
+        @ dp.message_handler(commands=["visibility"])
         async def process_about(message: types.Message):
             await message.answer(
                 "Какую настройку видимости применить к вашему профилю?",
                 reply_markup=markup_visibility,
             )
 
-        @database_sync_to_async
+        @ database_sync_to_async
         def get_user_data(data, message):
             p, _ = UserProfile.objects.get_or_create(
                 external_id=message.from_user.id,
@@ -102,7 +85,7 @@ class Command(BaseCommand):
             p.in_search = True
             p.save()
 
-        @database_sync_to_async
+        @ database_sync_to_async
         def update_game(data, message):
             p, _ = UserProfile.objects.get_or_create(
                 external_id=message.from_user.id,
@@ -113,7 +96,7 @@ class Command(BaseCommand):
             p.main_game = data["choose_game"]
             p.save()
 
-        @dp.message_handler(commands=["start"])
+        @ dp.message_handler(commands=["start"])
         async def send_welcome(message: types.Message):
             if message.from_user.username:
                 if await user_exists(message):
@@ -134,23 +117,19 @@ class Command(BaseCommand):
                     "для начала пользования ботом. Спасибо за понимание!"
                 )
 
-        @dp.message_handler(text=['Назад ↩️'])
+        @ dp.message_handler(text=['Назад ↩️'])
         async def go_back_home(message: types.Message):
             await message.answer("Вернулись домой 🏚️", reply_markup=home_keyboard)
 
-        @dp.message_handler(text=['Информация 🤓'])
+        @ dp.message_handler(text=['Информация 🤓'])
         async def information_show(message: types.Message):
             await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
 
-        @dp.message_handler(text=['Аккаунт 🫵'])
-        async def account_show(message: types.Message):
-            await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
-
-        @dp.message_handler(text=['Задать вопрос ❓'])
+        @ dp.message_handler(text=['Задать вопрос ❓'])
         async def question_show(message: types.Message):
             await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
 
-        @database_sync_to_async
+        @ database_sync_to_async
         def getContactEntitiesMessage():
             if len(Contact.objects.all()) > 0:
                 final_array = []
@@ -161,44 +140,56 @@ class Command(BaseCommand):
             else:
                 return "На данный момент нет доступных контактов 😅"
 
-        @dp.message_handler(text=['Контакты 🗒️'])
+        @ dp.message_handler(text=['Контакты 🗒️'])
         async def call_show(message: types.Message):
             message_text = await getContactEntitiesMessage()
             await message.answer(message_text, reply_markup=home_keyboard)
 
-        @dp.message_handler(text=['Специальности 🌐'])
+        @ dp.message_handler(text=['Специальности 🌐'])
         async def speliazations_show(message: types.Message):
             await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
 
-        @dp.message_handler(text=['Форма 🧥'])
+        @ dp.message_handler(text=['Форма 🧥'])
         async def form_show(message: types.Message):
+            await getFormButtons()
             if message.from_user.username:
                 await message.answer("Вот вся доступная форма для разных специальностей", reply_markup=inline_form_markup)
 
-        @database_sync_to_async
+        @ database_sync_to_async
         def getFormEntity(data):
             form = Form.objects.get(id=data)
             return form
 
-        @dp.callback_query_handler()
+        @ database_sync_to_async
+        def getFormButtons():
+            inline_form_markup.inline_keyboard = []
+            form_data = Form.objects.all()
+            for form_entity in form_data:
+                form_entity_inline_btn = InlineKeyboardButton(
+                    text=form_entity.name,
+                    callback_data=form_entity.id
+                )
+                inline_form_markup.add(form_entity_inline_btn)
+
+        @ dp.callback_query_handler()
         async def inline_callback_handler(query: types.CallbackQuery):
-            # print(query.data)
             form = await getFormEntity(query.data)
             message_text = f"Form name: {form.name}\n"
             message_text += f"Form file: {form.file}"
-            # # Edit the original message with the new message
-            media = json.dumps(aiogram_types.InputMediaDocument(
-                form.file.path).to_dict())
-            await bot.edit_message_text(text=message_text, chat_id=query.from_user.id, message_id=query.message.message_id, reply_markup=inline_form_markup)
-            media = types.InputMediaDocument(
-                media, filename=form.name)
+            data_path = os.path.join(project_path, 'media/')
+            form_file_path = f"{data_path}{form.file}"
             if (query.message.document):
+                media = types.InputFile(form.file.path)
+                await bot.edit_message_text(text=message_text, chat_id=query.from_user.id, message_id=query.message.message_id, reply_markup=inline_form_markup)
                 await bot.edit_message_media(chat_id=query.from_user.id, message_id=query.message.message_id, media=media)
             else:
                 try:
-                    await bot.send_document(chat_id=query.from_user.id, document=media, reply_to_message_id=query.message.message_id)
-                except exceptions.BadRequest:
-                    print(f"Could not send the file {form.file.path}")
+                    media = types.InputFile(form.file.path)
+                    await bot.edit_message_text(text=message_text, chat_id=query.from_user.id, message_id=query.message.message_id, reply_markup=inline_form_markup)
+                    await bot.edit_message_media(chat_id=query.from_user.id, message_id=query.message.message_id, media=media)
+
+                except exceptions.BadRequest as e:
+                    print(e)
 
         @ dp.message_handler(commands=["help"])
         async def send_welcome(message: types.Message):

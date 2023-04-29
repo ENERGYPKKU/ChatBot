@@ -1,7 +1,13 @@
 from django.contrib import admin
 
 from main.forms import ProfileForm
-from main.models import Game, Message, UserProfile, Form, Contact
+from main.models import (
+    Message,
+    UserProfile,
+    Form,
+    Contact,
+    Button
+)
 from django import forms
 from phonenumber_field.widgets import PhoneNumberInternationalFallbackWidget
 
@@ -41,9 +47,9 @@ class ContactAdmin(admin.ModelAdmin):
     form = ContactModelForm
 
 
-@admin.register(Game)
-class GameAdmin(admin.ModelAdmin):
-    list_display = ("id", "gamename")
+@admin.register(Button)
+class ButtonAdmin(admin.ModelAdmin):
+    list_display = ("name", "role")
 
 
 @admin.register(Form)

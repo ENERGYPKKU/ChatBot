@@ -1,6 +1,6 @@
 from django import forms
 
-from main.models import Game, UserProfile
+from main.models import UserProfile
 
 
 class ProfileForm(forms.ModelForm):
@@ -18,13 +18,4 @@ class ProfileForm(forms.ModelForm):
             "main_game": forms.TextInput,
             "steam_nickname": forms.TextInput,
             "about": forms.TextInput,
-        }
-
-
-class GameForm(forms.ModelForm):
-    class Meta:
-        model = Game
-        fields = ("gamename",)
-        widgets = {
-            "gamename": forms.TextInput,
         }
