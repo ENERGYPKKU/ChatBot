@@ -1,4 +1,3 @@
-from main.models import Game
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 
 inline_info_btn = InlineKeyboardButton(
@@ -18,14 +17,15 @@ inline_contact_call_btn = InlineKeyboardButton(
 
 home_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True, one_time_keyboard=False)
-home_keyboard.add(*["Информация 🤓",
-                    "Аккаунт 👋🏻",
-                    "Задать вопрос ❓",
-                    "Контакты 🗒️"])
+home_keyboard.add(*[
+    "Информация 🤓",
+    "Задать вопрос ❓",
+    "Контакты 🗒️"])
 
 info_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True, one_time_keyboard=False, row_width=2)
 info_keyboard.add(*["Специальности 🌐", "Форма 🧥", "Назад ↩️"])
+
 
 inline_phone_keyboard = InlineKeyboardMarkup()
 
@@ -47,14 +47,6 @@ inline_form_markup = InlineKeyboardMarkup(row_width=2)
 markup = InlineKeyboardMarkup()
 markup_search = InlineKeyboardMarkup()
 markup_visibility = InlineKeyboardMarkup()
-
-all_games = Game.objects.all()
-
-for game in all_games:
-    inline_btn = InlineKeyboardButton(
-        str(game.gamename), callback_data=str(game.gamename)
-    )
-    markup.insert(inline_btn)
 
 inline_btn_ok = InlineKeyboardButton(
     "✅ Выбрать пользователя", callback_data="user_selected"

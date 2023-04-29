@@ -12,7 +12,7 @@ services:
       - db
     volumes:
       - ./djbot:/app
-      - ./media/:/vol/web/media
+      - ./djbot/main/management/commands/media/:/vol/web/media
     ports:
       - "8000:8000"
 
