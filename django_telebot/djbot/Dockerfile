@@ -1,4 +1,4 @@
-FROM python:3.9 as base
+FROM python:3.10.1 as base
 
 ENV PATH="/scripts:${PATH}"
 

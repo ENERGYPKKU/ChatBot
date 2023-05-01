@@ -1,5 +1,11 @@
 from aiogram.utils import exceptions
-from main.models import UserProfile, Form, Contact
+from main.models import (
+    UserProfile,
+    Form,
+    Contact,
+    UserMessage,
+    BotConfiguration
+)
 from .keyboards import markup, inline_phone_keyboard, markup_search, markup_visibility, home_keyboard, info_keyboard, inline_form_markup
 from aiogram import types as aiogram_types
 from aiogram.types import InlineKeyboardButton
@@ -34,6 +40,10 @@ class FormSearch(StatesGroup):
     choose_game = State()
     choose_player = State()
     user_id = State()
+
+
+class Question(StatesGroup):
+    waiting_for_question = State()
 
 
 class Command(BaseCommand):
@@ -86,6 +96,19 @@ class Command(BaseCommand):
             p.save()
 
         @ database_sync_to_async
+        def create_user_message_entity(dict_data):
+            UserMessage.objects.create(
+                date_timestamp=dict_data["date"],
+                username=dict_data["from"]["username"],
+                content=dict_data["text"])
+
+        @ database_sync_to_async
+        def get_chat_id():
+            bot_configuration = BotConfiguration.objects.filter(
+                is_in_use=True).first()
+            return bot_configuration.admin_chat_id
+
+        @ database_sync_to_async
         def update_game(data, message):
             p, _ = UserProfile.objects.get_or_create(
                 external_id=message.from_user.id,
@@ -126,8 +149,16 @@ class Command(BaseCommand):
             await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
 
         @ dp.message_handler(text=['Задать вопрос ❓'])
-        async def question_show(message: types.Message):
-            await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
+        async def question_set(message: types.Message):
+
+            await message.answer("Как звучит вопрос? 🤔", reply_markup=info_keyboard)
+
+            await Question.waiting_for_question.set()
+
+        @ dp.message_handler(state=Question.waiting_for_question)
+        async def process_question(message: types.Message, state: FSMContext):
+            async with state.proxy() as data:
+                data["question"] = message.text
 
         @ database_sync_to_async
         def getContactEntitiesMessage():
