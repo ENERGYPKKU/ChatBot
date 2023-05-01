@@ -5,20 +5,23 @@ import uuid
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from datetime import datetime
 
 
 def validate_superusers(value):
     User = get_user_model()
     if User.objects.filter(is_superuser=True).count() > 1:
-        raise ValidationError('There can be only one superuser.')
+        raise ValidationError(
+            'Был создан новый пользователь, хотя этого не должно быть. Необходимо срочно связаться с администратором проекта. Возможна угроза безопасности.')
 
 
 class User(AbstractUser):
     validators = [validate_superusers]
 
     def save(self, *args, **kwargs):
-        if User.objects.all().count() == 1:
-            raise ValidationError('There can be only one superuser.')
+        if User.objects.all().count() > 1:
+            raise ValidationError(
+                'Был создан новый пользователь, хотя этого не должно быть. Необходимо срочно связаться с администратором проекта. Возможна угроза безопасности.')
         else:
             super(User, self).save(*args, **kwargs)
 
@@ -133,3 +136,83 @@ class Button(models.Model):
     class Meta:
         verbose_name = "Кнопка 🔘"
         verbose_name_plural = "Кнопки 🔘"
+
+
+class Specialization(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False)
+
+    name = models.CharField(
+        max_length=255, verbose_name="Название специальности")
+    study_date = models.CharField(
+        max_length=255, verbose_name="Время обучения")
+    study_objects = models.ManyToManyField("StudyObject")
+    description = models.CharField(
+        max_length=1024, verbose_name="Описание специальности")
+
+    class Meta:
+        verbose_name = "Специальность 🌐"
+        verbose_name_plural = "Специальности 🌐"
+
+
+class StudyObject(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False)
+
+    name = models.CharField(
+        max_length=255, verbose_name="Название специальности")
+    code = models.CharField(
+        max_length=255, verbose_name="Код предмета", blank=True)
+
+    class Meta:
+        verbose_name = "Предмет специальности 🌐"
+        verbose_name_plural = "Предметы специальности 🌐"
+
+
+class UserMessage(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False)
+
+    date_timestamp = models.BigIntegerField(
+        editable=False, verbose_name="Дата сообщения в виде timestamp")
+    username = models.CharField(
+        max_length=255, verbose_name="Имя пользователя в телеграме @Test123")
+    content = models.CharField(
+        max_length=5000, verbose_name="Содержимое сообщения")
+    date = models.CharField(
+        max_length=1000, verbose_name="Дата в нормальном виде", editable=False, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        self.date = datetime.fromtimestamp(self.date_timestamp)
+        super(UserMessage, self).save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "Пользовательское сообщение 📔"
+        verbose_name_plural = "Пользовательские сообщения 📔"
+
+
+class BotConfiguration(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False)
+
+    bot_token = models.CharField(
+        max_length=1000,
+        verbose_name="Токен для бота")
+    admin_chat_id = models.TextField(max_length=50,
+                                     verbose_name="Id админ чата для бота",
+                                     help_text="Чат бот изначально должен быть добавлен в чат"
+                                     )
+    is_in_use = models.BooleanField(
+        verbose_name="Используется ли данная конфигурация в боте?")
+
+    class Meta:
+        verbose_name = "Конфигурация бота 🤖"
+        verbose_name_plural = "Конфигурации бота 🤖"

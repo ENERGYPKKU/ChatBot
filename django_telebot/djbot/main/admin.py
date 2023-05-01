@@ -6,7 +6,11 @@ from main.models import (
     UserProfile,
     Form,
     Contact,
-    Button
+    Button,
+    Specialization,
+    StudyObject,
+    UserMessage,
+    BotConfiguration
 )
 from django import forms
 from phonenumber_field.widgets import PhoneNumberInternationalFallbackWidget
@@ -55,3 +59,9 @@ class ButtonAdmin(admin.ModelAdmin):
 @admin.register(Form)
 class FormAdmin(admin.ModelAdmin):
     list_display = ("name", "file")
+
+
+admin.site.register(Specialization)
+admin.site.register(StudyObject)
+admin.site.register(UserMessage)
+admin.site.register(BotConfiguration)
