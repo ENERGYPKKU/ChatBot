@@ -212,11 +212,21 @@ class Command(BaseCommand):
         async def speliazations_show(message: types.Message):
             await message.answer("О чем мне рассказать? 🤗", reply_markup=info_keyboard)
 
+        @database_sync_to_async
+        def get_file():
+            form = Form.objects.all().first()
+            return form
+
         @ dp.message_handler(text=['Форма 🧥'])
         async def form_show(message: types.Message):
             await getFormButtons()
             if message.from_user.username:
-                await message.answer("Вот вся доступная форма для разных специальностей", reply_markup=inline_form_markup)
+                form = await get_file()
+                data_path = os.path.join(project_path, 'media/')
+                form_file_path = f"{data_path}{form.file}"
+                with open(form_file_path, 'rb') as file:
+                    input_document = types.InputFile(file, form_file_path)
+                    await message.answer_document(input_document, caption="Вот вся доступная форма для разных специальностей", reply_markup=inline_form_markup)
 
         @ database_sync_to_async
         def getFormEntity(data):
@@ -237,22 +247,20 @@ class Command(BaseCommand):
         @ dp.callback_query_handler()
         async def inline_callback_handler(query: types.CallbackQuery):
             form = await getFormEntity(query.data)
-            message_text = f"Form name: {form.name}\n"
-            message_text += f"Form file: {form.file}"
+            message_text = f"{form.name}\n"
             data_path = os.path.join(project_path, 'media/')
             form_file_path = f"{data_path}{form.file}"
-            if (query.message.document):
-                media = types.InputFile(form.file.path)
-                await bot.edit_message_text(text=message_text, chat_id=query.from_user.id, message_id=query.message.message_id, reply_markup=inline_form_markup)
-                await bot.edit_message_media(chat_id=query.from_user.id, message_id=query.message.message_id, media=media)
-            else:
-                try:
-                    media = types.InputFile(form.file.path)
-                    await bot.edit_message_text(text=message_text, chat_id=query.from_user.id, message_id=query.message.message_id, reply_markup=inline_form_markup)
-                    await bot.edit_message_media(chat_id=query.from_user.id, message_id=query.message.message_id, media=media)
 
-                except exceptions.BadRequest as e:
-                    print(e)
+            # Good bots should send chat actions...
+            await types.ChatActions.upload_document()
+
+            with open(form_file_path, "rb") as file:
+                input_file = types.InputFile(
+                    filename=form_file_path, path_or_bytesio=file)
+                input_document = types.input_media.InputMediaDocument(
+                    input_file)
+                await query.message.edit_media(input_document)
+                await query.message.edit_caption(message_text, reply_markup=inline_form_markup)
 
         @ dp.message_handler(commands=["help"])
         async def send_welcome(message: types.Message):
