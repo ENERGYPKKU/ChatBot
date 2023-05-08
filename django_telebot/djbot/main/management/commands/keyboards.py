@@ -15,6 +15,10 @@ inline_contact_specialist_btn = InlineKeyboardButton(
 inline_contact_call_btn = InlineKeyboardButton(
     text="Позвонить 🤳🏻", callback_data="contact_call")
 
+cancel_keyboard = ReplyKeyboardMarkup()
+
+cancel_keyboard.add(*["Прекратить диалог 🛑"])
+
 home_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True, one_time_keyboard=False)
 home_keyboard.add(*[
@@ -43,6 +47,7 @@ rps_buttons = ['🪨 rock', "📄 paper", "✂ scissors"]
 rps_keyboard.add(*rps_buttons)
 
 inline_form_markup = InlineKeyboardMarkup(row_width=2)
+
 
 markup = InlineKeyboardMarkup()
 markup_search = InlineKeyboardMarkup()

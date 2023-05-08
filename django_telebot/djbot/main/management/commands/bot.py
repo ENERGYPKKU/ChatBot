@@ -6,7 +6,16 @@ from main.models import (
     UserMessage,
     BotConfiguration
 )
-from .keyboards import markup, inline_phone_keyboard, markup_search, markup_visibility, home_keyboard, info_keyboard, inline_form_markup
+from .keyboards import (
+    markup,
+    inline_phone_keyboard,
+    markup_search,
+    markup_visibility,
+    home_keyboard,
+    cancel_keyboard,
+    info_keyboard,
+    inline_form_markup
+)
 from aiogram import types as aiogram_types
 from aiogram.types import InlineKeyboardButton
 from django.db.models import Q
@@ -98,9 +107,12 @@ class Command(BaseCommand):
         @ database_sync_to_async
         def create_user_message_entity(dict_data):
             UserMessage.objects.create(
-                date_timestamp=dict_data["date"],
-                username=dict_data["from"]["username"],
-                content=dict_data["text"])
+                date_timestamp=dict_data["date_timestamp"],
+                username=dict_data["username"],
+                content=dict_data["content"],
+                date=dict_data["date"],
+                user_id=dict_data["user_id"]
+            )
 
         @ database_sync_to_async
         def get_chat_id():
@@ -151,14 +163,34 @@ class Command(BaseCommand):
         @ dp.message_handler(text=['Задать вопрос ❓'])
         async def question_set(message: types.Message):
 
-            await message.answer("Как звучит вопрос? 🤔", reply_markup=info_keyboard)
+            await message.answer("Как звучит вопрос? 🤔", reply_markup=cancel_keyboard)
 
             await Question.waiting_for_question.set()
+
+        @dp.message_handler(Text(equals='Прекратить диалог 🛑', ignore_case=True), state='*')
+        async def stop_converstation(message: types.Message, state: FSMContext):
+
+            await state.finish()
+
+            await bot.send_message(message.chat.id, "Диалог был остановлен", reply_markup=info_keyboard)
 
         @ dp.message_handler(state=Question.waiting_for_question)
         async def process_question(message: types.Message, state: FSMContext):
             async with state.proxy() as data:
                 data["question"] = message.text
+
+            chat_id = int(await get_chat_id())
+            dict_data = {
+                "date_timestamp": int(message.date.timestamp()),
+                "username": message.from_user.username,
+                "content": message.text,
+                "date": message.date,
+                "user_id": message.from_user.id
+            }
+            await create_user_message_entity(dict_data)
+            await message.forward(chat_id)
+
+            await message.reply("Сообщение было перенаправлено специалисту ")
 
         @ database_sync_to_async
         def getContactEntitiesMessage():
@@ -238,6 +270,39 @@ class Command(BaseCommand):
                     "Пожалуйста установите Имя пользователя в настройках Telegram "
                     "для начала пользования ботом. Спасибо за понимание!"
                 )
+
+        @ database_sync_to_async
+        def get_user_message(date_timestamp):
+            try:
+                user_message = UserMessage.objects.get(
+                    date_timestamp=date_timestamp)
+                return user_message.user_id
+            except UserMessage.DoesNotExist:
+                print("no such message")
+
+        @ database_sync_to_async
+        def get_user_message_text(date_timestamp):
+            try:
+                user_message = UserMessage.objects.get(
+                    date_timestamp=date_timestamp)
+                return user_message.content
+            except UserMessage.DoesNotExist:
+                print("no such message")
+
+        @dp.message_handler()
+        async def forward_reply(message: types.Message):
+            if (str(message.chat.id) != await get_chat_id()):
+                return
+            if (message["reply_to_message"]):
+                try:
+                    date_timestamp = int(
+                        message.reply_to_message.forward_date.timestamp())
+                    chat_id = int(await get_user_message(date_timestamp))
+                    user_message_text = await get_user_message_text(date_timestamp)
+                    text_message = f"Сообщение отправителя ❓\n{user_message_text}\n\nСообщение специалиста 🖊️\n{message.text}"
+                    await bot.send_message(chat_id=chat_id, text=text_message)
+                except Exception:
+                    print("ошибка отправления")
 
         @ dp.message_handler(commands=["update", "profile"])
         async def send_update(message: types.Message):
