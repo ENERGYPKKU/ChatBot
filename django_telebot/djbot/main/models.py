@@ -26,66 +26,15 @@ class User(AbstractUser):
             super(User, self).save(*args, **kwargs)
 
 
-class UserProfile(models.Model):
-    external_id = models.PositiveIntegerField(
-        verbose_name="Внешний ID пользователя",
-        unique=True,
-    )
-    name = models.TextField(
-        null=True,
-        verbose_name="Имя пользователя",
-    )
-    main_game = models.TextField(
-        null=True,
-        verbose_name="Основная игра",
-    )
-    steam_nickname = models.TextField(
-        null=True,
-        verbose_name="Никнейм в Steam",
-    )
-    about = models.TextField(
-        null=True,
-        verbose_name="О пользователе",
-    )
-
-    in_search = models.BooleanField(
-        null=True,
-        verbose_name="Статус в поиске",
-    )
-
-    def __str__(self):
-        return f"#{self.external_id} {self.name}"
-
-    class Meta:
-        verbose_name = "Профиль"
-        verbose_name_plural = "Профили"
-
-
-class Message(models.Model):
-    profile = models.ForeignKey(
-        to="main.UserProfile",
-        verbose_name="Профиль",
-        on_delete=models.PROTECT,
-    )
-    text = models.TextField(
-        verbose_name="Текст",
-    )
-    created_at = models.DateTimeField(
-        verbose_name="Время получения",
-        auto_now_add=True,
-    )
-
-    def __str__(self):
-        return f"Сообщение {self.pk} от {self.profile}"
-
-    class Meta:
-        verbose_name = "Сообщение"
-        verbose_name_plural = "Сообщения"
-
-
 class Form(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False)
     name = models.CharField(max_length=255, verbose_name="Название формы")
-    file = models.FileField(verbose_name="Файл, который содержит форму")
+    file = models.FileField(
+        verbose_name="Файл, который содержит информацию о форме")
+    is_entry = models.BooleanField(verbose_name="Является ли файл стартовым?")
 
     def __str__(self):
         return self.name
@@ -113,7 +62,11 @@ button_choices = [
     ("Домой", "Домой"),
     ("Информация", "Информация"),
     ("Вопрос", "Вопрос"),
-    ("Контакты", "Контакты")
+    ("Контакты", "Контакты"),
+    ('Назад', 'Назад'),
+    ('Остановить диалог', 'Остановить диалог'),
+    ("Форма", "Форма"),
+    ("Специальности", "Специальности")
 ]
 
 
@@ -129,44 +82,66 @@ class Button(models.Model):
                             verbose_name="Роль кнопки",
                             max_length=50)
 
+    def __str__(self):
+        return f"Кнопка '{self.name}' с ролью {self.role}"
+
     class Meta:
         verbose_name = "Кнопка 🔘"
         verbose_name_plural = "Кнопки 🔘"
 
 
-class Specialization(models.Model):
+class Specialisation(models.Model):
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
         editable=False)
-
     name = models.CharField(
         max_length=255, verbose_name="Название специальности")
-    study_date = models.CharField(
-        max_length=255, verbose_name="Время обучения")
-    study_objects = models.ManyToManyField("StudyObject")
-    description = models.CharField(
-        max_length=1024, verbose_name="Описание специальности")
+    file = models.FileField(
+        verbose_name="Файл, который содержит информацию о специальности")
+    is_entry = models.BooleanField(verbose_name="Является ли файл стартовым?")
 
     class Meta:
         verbose_name = "Специальность 🌐"
         verbose_name_plural = "Специальности 🌐"
 
+    def __str__(self):
+        return f"Специальность: {self.name}"
 
-class StudyObject(models.Model):
+
+message_choices = (
+    ('Привет', "Привет"),
+    ("Вернуться домой", "Вернуться домой"),
+    ("О чем рассказать", "О чем рассказать"),
+    ("Как звучит вопрос", "Как звучит вопрос"),
+    ("Остановка диалога", "Остановка диалога"),
+    ("Переотправка сообщения специалисту", "Переотправка сообщения специалисту"),
+    ("Доступные контакты", "Доступные контакты"),
+    ("Нет контактов", "Нет контактов"),
+    ("Доступная информация о специальностях",
+     "Доступная информация о специальностях"),
+    ("Доступная информация о форме", "Доступная информация о форме"),
+    ("Сообщение отправителя", "Сообщение отправителя"),
+    ("Сообщение специалиста", "Сообщение специалиста")
+)
+
+
+class BotMessage(models.Model):
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
         editable=False)
-
-    name = models.CharField(
-        max_length=255, verbose_name="Название специальности")
-    code = models.CharField(
-        max_length=255, verbose_name="Код предмета", blank=True)
+    name = models.TextField(
+        max_length=1000, verbose_name="Содержимое сообщения")
+    role = models.CharField(choices=message_choices,
+                            max_length=200, verbose_name="Роль сообщения")
 
     class Meta:
-        verbose_name = "Предмет специальности 🌐"
-        verbose_name_plural = "Предметы специальности 🌐"
+        verbose_name = "Сообщение бота 🤖"
+        verbose_name_plural = "Сообщения бота 🤖"
+
+    def __str__(self):
+        return f"Сообщение {self.name}"
 
 
 class UserMessage(models.Model):
@@ -190,18 +165,16 @@ class UserMessage(models.Model):
         self.date = datetime.fromtimestamp(self.date_timestamp)
         super(UserMessage, self).save(*args, **kwargs)
 
+    def __str__(self):
+        return f"Сообщение {self.username}: {self.content}
+
     class Meta:
         verbose_name = "Пользовательское сообщение 📔"
         verbose_name_plural = "Пользовательские сообщения 📔"
 
 
 class BotConfiguration(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False)
-
-    bot_token = models.CharField(
+    bot_token = models.TextField(
         max_length=1000,
         verbose_name="Токен для бота")
     admin_chat_id = models.TextField(max_length=50,
@@ -210,6 +183,9 @@ class BotConfiguration(models.Model):
                                      )
     is_in_use = models.BooleanField(
         verbose_name="Используется ли данная конфигурация в боте?")
+
+    def __str__(self):
+        return f"Конфигурация бота {self.id}"
 
     class Meta:
         verbose_name = "Конфигурация бота 🤖"

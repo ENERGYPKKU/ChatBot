@@ -1,38 +1,16 @@
 from django.contrib import admin
 
-from main.forms import ProfileForm
 from main.models import (
-    Message,
-    UserProfile,
     Form,
     Contact,
     Button,
-    Specialization,
-    StudyObject,
+    Specialisation,
     UserMessage,
-    BotConfiguration
+    BotConfiguration,
+    BotMessage
 )
 from django import forms
 from phonenumber_field.widgets import PhoneNumberInternationalFallbackWidget
-
-
-@admin.register(UserProfile)
-class ProfileAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "external_id",
-        "name",
-        "main_game",
-        "steam_nickname",
-        "about",
-        "in_search",
-    )
-    form = ProfileForm
-
-
-@admin.register(Message)
-class MessageAdmin(admin.ModelAdmin):
-    list_display = ("id", "profile", "text", "created_at")
 
 
 class ContactModelForm(forms.ModelForm):
@@ -61,7 +39,7 @@ class FormAdmin(admin.ModelAdmin):
     list_display = ("name", "file")
 
 
-admin.site.register(Specialization)
-admin.site.register(StudyObject)
+admin.site.register(Specialisation)
 admin.site.register(UserMessage)
 admin.site.register(BotConfiguration)
+admin.site.register(BotMessage)

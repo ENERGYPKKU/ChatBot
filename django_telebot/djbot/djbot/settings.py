@@ -84,5 +84,3 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, '/vol/web/media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-TOKEN = os.environ.get('TOKEN')  # Telegram bot
