@@ -1,70 +1,68 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
+from main.models import (
+    Button
+)
 
-inline_info_btn = InlineKeyboardButton(
-    text="Информация 🤓", callback_data="info")
-inline_account_btn = InlineKeyboardButton(
-    text="Аккаунт 🫵", callback_data="account")
-inline_specializations_btn = InlineKeyboardButton(
-    text="Специальности 🌐", callback_data="specializations")
-inline_clothes_form_btn = InlineKeyboardButton(
-    text="Форма 🧥", callback_data="clothes_form")
-inline_ask_question_btn = InlineKeyboardButton(
-    text="Задать вопрос ❓", callback_data="ask_question")
-inline_contact_specialist_btn = InlineKeyboardButton(
-    text="Обратиться к специалисту 🖋️", callback_data="contact_specialist")
-inline_contact_call_btn = InlineKeyboardButton(
-    text="Позвонить 🤳🏻", callback_data="contact_call")
 
-cancel_keyboard = ReplyKeyboardMarkup()
+cancel_keyboard = ReplyKeyboardMarkup(
+    resize_keyboard=True, row_width=1, one_time_keyboard=True)
 
-cancel_keyboard.add(*["Прекратить диалог 🛑"])
+
+try:
+    button_cancel = Button.objects.get(role="Остановить диалог").name
+except Button.DoesNotExist:
+    button_cancel = "Остановить диалог 🛑"
+
+cancel_keyboard.add(*[button_cancel])
 
 home_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True, one_time_keyboard=False)
+
+try:
+    button_info = Button.objects.get(role="Информация").name
+except Button.DoesNotExist:
+    button_info = "Информация 🤓"
+
+try:
+    button_question = Button.objects.get(role="Вопрос").name
+except Button.DoesNotExist:
+    button_question = "Задать вопрос ❓"
+
+try:
+    button_contacts = Button.objects.get(role="Контакты").name
+except Button.DoesNotExist:
+    button_contacts = "Контакты 🗒️"
+
 home_keyboard.add(*[
-    "Информация 🤓",
-    "Задать вопрос ❓",
-    "Контакты 🗒️"])
+    button_info,
+    button_question,
+    button_contacts
+])
+
+
+try:
+    button_specialisations = Button.objects.get(role="Специальности").name
+except Button.DoesNotExist:
+    button_specialisations = "Специальности 🌐"
+
+try:
+    button_form = Button.objects.get(role="Форма").name
+except Button.DoesNotExist:
+    button_form = "Форма 🧥"
+
+try:
+    button_back = Button.objects.get(role="Назад").text
+except Button.DoesNotExist:
+    button_back = "Назад ↩️"
 
 info_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True, one_time_keyboard=False, row_width=2)
-info_keyboard.add(*["Специальности 🌐", "Форма 🧥", "Назад ↩️"])
 
-
-inline_phone_keyboard = InlineKeyboardMarkup()
-
-
-inline_stats_button = InlineKeyboardButton(
-    text="📃 Stats", callback_data='stats')
-inline_play_button = InlineKeyboardButton(
-    text="🎮 Play", callback_data='play')
-hello_inline = InlineKeyboardMarkup(row_width=2).add(
-    inline_stats_button, inline_play_button)
-
-rps_keyboard = ReplyKeyboardMarkup(
-    resize_keyboard=True, one_time_keyboard=False)
-rps_buttons = ['🪨 rock', "📄 paper", "✂ scissors"]
-rps_keyboard.add(*rps_buttons)
+info_keyboard.add(*[
+    button_specialisations,
+    button_form,
+    button_back
+])
 
 inline_form_markup = InlineKeyboardMarkup(row_width=2)
-
-
-markup = InlineKeyboardMarkup()
-markup_search = InlineKeyboardMarkup()
-markup_visibility = InlineKeyboardMarkup()
-
-inline_btn_ok = InlineKeyboardButton(
-    "✅ Выбрать пользователя", callback_data="user_selected"
-)
-inline_btn_next = InlineKeyboardButton(
-    "❌ Другой пользователь", callback_data="next_user"
-)
-
-markup_search.add(inline_btn_next, inline_btn_ok)
-
-
-inline_btn_vis = InlineKeyboardButton(
-    "Доступен для поиска", callback_data="visible")
-inline_btn_invis = InlineKeyboardButton("Скрыт", callback_data="invisible")
-
-markup_visibility.add(inline_btn_vis, inline_btn_invis)
+inline_spec_markup = InlineKeyboardMarkup(row_width=2)
