@@ -180,13 +180,15 @@ class UserMessage(models.Model):
         editable=False)
 
     date_timestamp = models.BigIntegerField(
-        editable=False, verbose_name="Дата сообщения в виде timestamp")
+        verbose_name="Дата сообщения в виде timestamp")
     username = models.CharField(
         max_length=255, verbose_name="Имя пользователя в телеграме @Test123")
-    content = models.CharField(
+    content = models.TextField(
         max_length=5000, verbose_name="Содержимое сообщения")
     date = models.CharField(
         max_length=1000, verbose_name="Дата в нормальном виде", editable=False, blank=True, null=True)
+    user_id = models.CharField(
+        max_length=255, verbose_name="Идентификатор пользователя в телеграме")
 
     def save(self, *args, **kwargs):
         self.date = datetime.fromtimestamp(self.date_timestamp)
