@@ -84,10 +84,6 @@ class Message(models.Model):
 
 
 class Form(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False)
     name = models.CharField(max_length=255, verbose_name="Название формы")
     file = models.FileField(verbose_name="Файл, который содержит форму")
 
